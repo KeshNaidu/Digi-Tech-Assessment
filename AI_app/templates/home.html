@@ -1,0 +1,8 @@
+<!-- home.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Welcome to the AI App</h1>
+    <a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">Register</a>
+{% endblock %}
+
