@@ -1,7 +1,8 @@
 <!-- home.html -->
 {% extends "base.html" %}
-
 {% block content %}
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<div class="w3-container w3-blue-grey">
     <h1>Welcome to the AI App</h1>
     <a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">Register</a>
 {% endblock %}

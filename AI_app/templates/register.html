@@ -2,12 +2,13 @@
 {% block title %}Register{% endblock %}
 {% block header %}Register{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<div class="w3-container w3-blue-grey">
     <form method="POST">
         Username: <input type="text" name="username"><br>
         Password: <input type="password" name="password"><br>
         Age: <input type="number" name="age"><br>
         <input type="submit" value="Register">
-        <p>About Me Page <a href="{{ url_for('aboutme') }}" class="w3-container w3-teal">MyPage</a></p>
         <p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
     </form>
 {% endblock %}
