@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Llama2{% endblock %}
+{% block header %}Llama2{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<div class="w3-container w3-blue-grey">
+    <h1><strong>Llama2</strong></h1>
+    <form method="post" action="/chat">
+        <input type="text" id="input" name="question" required><br>
+        <input type="submit" value="Enter" required><br>
+
+        </form>
+        {% if input %}
+            <p>You: {{ input }}</p>
+        <ul>
+        {% for item in history %}
+            <li>
+                <strong>Question:</strong>  {{question}}
+                <strong>Response:</strong>  {{response}}
+            </li>
+        </ul>
+        {% endfor %}
+
+        {% endif %}
+
+        {% if assistant_reply %}
+        <div class="w3-card">
+             <p>Llama: {{ assistant_reply }}</p>
+        </div>
+
+        {% endif %}
+        <a href="{{ url_for('home') }}">Home</a>
+{% endblock %}

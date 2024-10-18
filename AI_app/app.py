@@ -2,20 +2,18 @@ import requests
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from config import Config
+api_endpoint = 'http://localhost:11434/api/chat'  #  Is the location that user inputs are send to and the Ai model responses are sent to, connects the user input and AI response
 
 hashed_password = generate_password_hash('your_password', method='pbkdf2:sha256')
 print(hashed_password)
 # Hashing password improves security and password theft, as even if hacker gets the password, it will be hashed (unique string) making it difficult to decipher
 
-def query_llama(api_key, prompt):
-    headers = {'Authorization': f'Bearer {api_key}'}
-    data = {'prompt': prompt, 'max_tokens': 150}
-    response = requests.post('https://api.llama3.com/v1/completions', headers=headers, json=data)
-    return response.json()
-
 # Create a Flask instance
 app = Flask(__name__)
 app.secret_key = 'kawhi'  # Required for session management
+
+# Configure your OpenAI API keyclient = OpenAI(api_key=Config.OPENAI_API_KEY)
 
 # Connect to SQLite3 database (or create it if it doesn't exist)
 def init_db():
@@ -36,10 +34,10 @@ def home():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        age = request.form['age']
-        conn = sqlite3.connect('users.db')
+        username = request.form['username']  # asks user to create username
+        password = request.form['password']  # asks user to create password
+        age = request.form['age']  # asks user to create age
+        conn = sqlite3.connect('users.db')  # connects the new user to the database
         c = conn.cursor()
         c.execute("INSERT INTO users (username, password, age) VALUES (?, ?, ?)", (username, password, age))
         conn.commit()
@@ -51,9 +49,9 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        conn = sqlite3.connect('users.db')
+        username = request.form['username']  # requests the username
+        password = request.form['password']  # requests the password
+        conn = sqlite3.connect('users.db')   # connects to the sqlite database to cross reference
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
         user = c.fetchone()
@@ -63,48 +61,49 @@ def login():
             session['age'] = user[2]
             return redirect(url_for('welcome'))
         else:
-            return 'Invalid credentials'
+            return 'Invalid credentials'  #  if the login isn't correct it will return with the message 'Invalid credentials'
     return render_template('login.html')
 
 # Welcome page route
 @app.route('/welcome')
 def welcome():
     if 'username' in session:
-        username = session['username']
-        age = session['age']
-        return render_template('welcome.html', username=username, age=age)
+        username = session['username']  # takes the user username
+        age = session['age']  # takes the user age
+        return render_template('welcome.html', username=username, age=age)  # greets them by their username and their age
     else:
         return redirect(url_for('login'))
-
-# Calculator page route
-@app.route('/calculator', methods=['GET', 'POST'])
-def calculator():
-    result = None
-    if request.method == 'POST':
-        num1 = float(request.form['num1'])
-        num2 = float(request.form['num2'])
-        operator = request.form['operator']
-        if operator == '+':
-            result = num1 + num2
-        elif operator == '-':
-            result = num1 - num2
-        elif operator == '*':
-            result = num1 * num2
-        elif operator == '/':
-            if num2 != 0:
-                result = num1 / num2
-            else:
-                result = "Error: Division by zero is undefined"
-        else:
-            result = "Invalid operator"
-    return render_template('calculator.html', result=result)
 
 # Logout route
 @app.route('/logout')
 def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
+    session.pop('username', None)  # if you want to logout it will reset the username and take them out of the page
+    return redirect(url_for('login'))  # directs them to the login page
 
+# Ai chatbot route
+@app.route('/chat', methods=['GET', 'POST'])
+def chat():
+    messages = []  # will take in messages as in a list
+    if request.method == 'POST':
+        user_input = request.form.get('input')
+
+        messages.append({'role': 'user', 'content': user_input})
+
+        data = {
+            'model': 'llama2',
+            'stream': False,
+            'messages': messages
+        }
+
+        response = requests.post(api_endpoint, json=data)  # connects the request and response to the api endpoint
+        if response.status_code == 200:
+            response_data = response.json()
+            assistant_reply = response_data['message']['content']  # it will respond to the message with 'content'
+
+            # updating messages with response
+            messages.append(response_data['message'])
+            return render_template('chat.html', input=user_input, assistant_reply=assistant_reply)   # return the Ai reply to the chat page, as well as the input
+    return render_template('chat.html')  # return the chat template to chat html, other render template was for the input and response
 
 
 #  Main function to run the Flask app and initialise database
